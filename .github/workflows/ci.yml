@@ -132,43 +132,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: promptlab_test
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      API_PORT: 3001
-      FRONTEND_PORT: 9090
-      NODE_ENV: test
-      DATABASE_URL: postgresql://postgres:password@localhost:5432/promptlab_test
-      
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Actualizamos a Node 22 para evitar el error de EBADENGINE
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22' # Subimos a 22 para evitar el error de EBADENGINE
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ./apps/promptlab/backend
-
-      # Corregimos la ruta del esquema de Prisma
-      - name: Run migrations
-        run: npx prisma migrate deploy --schema ./prisma/schema.prisma
         working-directory: ./apps/promptlab/backend
 
       - name: Run tests
