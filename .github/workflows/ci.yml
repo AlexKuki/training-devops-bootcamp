@@ -127,24 +127,25 @@ name: CI Pipeline
 
 on:
   push:
+    # Cambiamos la rama para que se active en tu rama de trabajo
     branches: [feature/docker]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22' # Subimos a 22 para evitar el error de EBADENGINE
+          node-version: '20'
 
+      # Instalación de dependencias con la ruta correcta
       - name: Install dependencies
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
+      # Ejecución de tests con la ruta correcta
       - name: Run tests
         run: npm test
         working-directory: ./apps/promptlab/backend
