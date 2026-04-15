@@ -127,28 +127,39 @@ name: CI Pipeline
 
 on:
   push:
+    # Se activa solo cuando subes cambios a la rama feature/docker
     branches: [feature/docker]
 
 jobs:
   test:
+    name: Run Backend Tests
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
+      # 1. Descargar el código del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configurar el entorno de Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/promptlab/backend/package-lock.json
 
+      # 3. Instalar dependencias usando npm ci (Clean Install)
       - name: Install dependencies
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
+      # 4. Ejecutar los tests
+      # Forzamos NODE_ENV=test para evitar errores de configuración de producción
       - name: Run tests
-        # Forzamos NODE_ENV a 'test' solo para la ejecución de los tests
         run: npm test
         working-directory: ./apps/promptlab/backend
         env:
           NODE_ENV: test
           API_PORT: 3001
-          # Si usas alguna base de datos tipo SQLite o similar, 
-          # asegúrate de que el backend tenga permisos de escritura.
+          # Si tu app usa alguna base de datos o secreto, añádelo aquí:
+          # DATABASE_URL: "sqlite://:memory:"
