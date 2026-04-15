@@ -127,7 +127,6 @@ name: CI Pipeline
 
 on:
   push:
-    # Se activa solo cuando subes cambios a la rama feature/docker
     branches: [feature/docker]
 
 jobs:
@@ -136,11 +135,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Descargar el código del repositorio
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configurar el entorno de Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -148,18 +145,18 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./apps/promptlab/backend/package-lock.json
 
-      # 3. Instalar dependencias usando npm ci (Clean Install)
       - name: Install dependencies
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
-      # 4. Ejecutar los tests
-      # Forzamos NODE_ENV=test para evitar errores de configuración de producción
+      # Este paso es para DEPURE: Nos dirá qué archivos ve GitHub
+      - name: Debug File Structure
+        run: ls -R
+        working-directory: ./apps/promptlab/backend
+
       - name: Run tests
         run: npm test
         working-directory: ./apps/promptlab/backend
         env:
           NODE_ENV: test
           API_PORT: 3001
-          # Si tu app usa alguna base de datos o secreto, añádelo aquí:
-          # DATABASE_URL: "sqlite://:memory:"
