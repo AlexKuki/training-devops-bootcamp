@@ -133,7 +133,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
-    # Levantamos la base de datos como un servicio de Docker
     services:
       postgres:
         image: postgres:15
@@ -142,7 +141,6 @@ jobs:
           POSTGRES_PASSWORD: password
         ports:
           - 5432:5432
-        # Esperamos a que la DB esté lista para recibir conexiones
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -153,22 +151,24 @@ jobs:
       API_PORT: 3001
       FRONTEND_PORT: 9090
       NODE_ENV: test
-      # ¡Importante! La URL de conexión para que el backend la encuentre
       DATABASE_URL: postgresql://postgres:password@localhost:5432/promptlab_test
       
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      # Actualizamos a Node 22 para evitar el error de EBADENGINE
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
-      # Si usas Prisma o Sequelize, necesitas correr las migraciones antes de testear
+      # Corregimos la ruta del esquema de Prisma
       - name: Run migrations
-        run: npx prisma migrate deploy || npm run migrate
+        run: npx prisma migrate deploy --schema ./prisma/schema.prisma
         working-directory: ./apps/promptlab/backend
 
       - name: Run tests
