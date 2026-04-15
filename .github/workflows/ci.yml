@@ -149,9 +149,13 @@ jobs:
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
-      # Este paso es para DEPURE: Nos dirá qué archivos ve GitHub
-      - name: Debug File Structure
-        run: ls -R
+      # PASO CLAVE: Asegurar que el archivo de datos existe
+      # Si tu código usa un archivo como 'prompts.json', GitHub necesita que esté ahí
+      - name: Ensure data file exists
+        run: |
+          mkdir -p data
+          # Si no existe el archivo, creamos uno vacío para que no rompa la app
+          [ -f ./data/prompts.json ] || echo "[]" > ./data/prompts.json
         working-directory: ./apps/promptlab/backend
 
       - name: Run tests
