@@ -91,7 +91,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [feature/docker]
 
 jobs:
   hello:
