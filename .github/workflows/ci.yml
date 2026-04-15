@@ -127,7 +127,6 @@ name: CI Pipeline
 
 on:
   push:
-    # Cambiamos la rama para que se active en tu rama de trabajo
     branches: [feature/docker]
 
 jobs:
@@ -140,12 +139,16 @@ jobs:
         with:
           node-version: '20'
 
-      # Instalación de dependencias con la ruta correcta
       - name: Install dependencies
         run: npm ci
         working-directory: ./apps/promptlab/backend
 
-      # Ejecución de tests con la ruta correcta
       - name: Run tests
+        # Forzamos NODE_ENV a 'test' solo para la ejecución de los tests
         run: npm test
         working-directory: ./apps/promptlab/backend
+        env:
+          NODE_ENV: test
+          API_PORT: 3001
+          # Si usas alguna base de datos tipo SQLite o similar, 
+          # asegúrate de que el backend tenga permisos de escritura.
