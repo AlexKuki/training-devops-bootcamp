@@ -87,6 +87,18 @@
 #             ghcr.io/${{ github.repository_owner }}/promptlab-frontend:latest
 #             ghcr.io/${{ github.repository_owner }}/promptlab-frontend:${{ github.sha }}
 
+# name: CI Pipeline
+
+# on:
+#   push:
+#     branches: [feature/docker]
+
+# jobs:
+#   hello:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - run: echo "PromptLab CI funciona"
+
 name: CI Pipeline
 
 on:
@@ -94,7 +106,14 @@ on:
     branches: [feature/docker]
 
 jobs:
-  hello:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "PromptLab CI funciona"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: ./backend
+      - run: npm test
+        working-directory: ./backend
