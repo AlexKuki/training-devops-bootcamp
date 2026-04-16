@@ -2,7 +2,10 @@ name: CI Pipeline
 
 on:
   push:
+    # Añadimos explícitamente las ramas para evitar confusiones
+    branches: [main, feature/docker]
   pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -13,40 +16,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - run: npm ci
         working-directory: ./apps/promptlab/backend
-
       - run: mkdir -p data
         working-directory: ./apps/promptlab/backend
-
       - run: npm test
         working-directory: ./apps/promptlab/backend
         env:
+          NODE_ENV: test
           DB_PATH: /tmp/promptlab-ci.db
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - run: npm ci
         working-directory: ./apps/promptlab/backend
-
       - run: npm run lint
         working-directory: ./apps/promptlab/backend
 
   build:
     runs-on: ubuntu-latest
     needs: [test, lint]
+    # Si los tests fallan (el Error 500 que tenías antes), este job no se ejecutará.
     steps:
       - uses: actions/checkout@v4
 
@@ -63,7 +61,7 @@ jobs:
           echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
 
       - name: Build and push API image
-        if: github.ref == 'refs/heads/main'
+        # QUITAMOS el IF de main para que funcione en tu rama de práctica
         uses: docker/build-push-action@v6
         with:
           context: ./apps/promptlab/backend
@@ -73,7 +71,7 @@ jobs:
             ghcr.io/${{ steps.owner.outputs.owner }}/promptlab-api:${{ github.sha }}
 
       - name: Build and push Frontend image
-        if: github.ref == 'refs/heads/main'
+        # QUITAMOS el IF de main para que funcione en tu rama de práctica
         uses: docker/build-push-action@v6
         with:
           context: ./apps/promptlab/frontend
