@@ -2,6 +2,7 @@ name: CI Pipeline
 
 on:
   push:
+  pull_request:
 
 permissions:
   contents: read
@@ -12,28 +13,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - run: npm ci
         working-directory: ./apps/promptlab/backend
+
       - run: mkdir -p data
         working-directory: ./apps/promptlab/backend
+
       - run: npm test
         working-directory: ./apps/promptlab/backend
         env:
           DB_PATH: /tmp/promptlab-ci.db
+
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - run: npm ci
         working-directory: ./apps/promptlab/backend
+
       - run: npm run lint
         working-directory: ./apps/promptlab/backend
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -41,25 +56,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-  build:
-    runs-on: ubuntu-latest
-    needs: [test, lint]
-    steps:
-      - uses: actions/checkout@v4
 
-      # - name: Build API image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: ./apps/promptlab/backend
-      #     push: false
-      #     tags: promptlab-api:latest
-
-      # - name: Build Frontend image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: ./apps/promptlab/frontend
-      #     push: false
-      #     tags: promptlab-frontend:latest
+      - name: Set lowercase repository owner
+        id: owner
+        run: |
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
 
       - name: Build and push API image
         if: github.ref == 'refs/heads/main'
@@ -68,8 +69,8 @@ jobs:
           context: ./apps/promptlab/backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/promptlab-api:latest
-            ghcr.io/${{ github.repository_owner }}/promptlab-api:${{ github.sha }}
+            ghcr.io/${{ steps.owner.outputs.owner }}/promptlab-api:latest
+            ghcr.io/${{ steps.owner.outputs.owner }}/promptlab-api:${{ github.sha }}
 
       - name: Build and push Frontend image
         if: github.ref == 'refs/heads/main'
@@ -78,5 +79,5 @@ jobs:
           context: ./apps/promptlab/frontend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/promptlab-frontend:latest
-            ghcr.io/${{ github.repository_owner }}/promptlab-frontend:${{ github.sha }}
+            ghcr.io/${{ steps.owner.outputs.owner }}/promptlab-frontend:latest
+            ghcr.io/${{ steps.owner.outputs.owner }}/promptlab-frontend:${{ github.sha }}
